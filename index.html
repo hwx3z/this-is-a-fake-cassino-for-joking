@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lucky Vegas</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #1a1a2e;
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    #app { width: 100%; max-width: 480px; }
+    h1 { font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 4px; color: #f5c842; letter-spacing: 2px; }
+    .subtitle { font-size: 13px; color: #aaa; text-align: center; margin-bottom: 1.5rem; }
+
+    /* Balance cards */
+    .balance-row { display: flex; gap: 10px; margin-bottom: 1.25rem; }
+    .stat-card {
+      flex: 1;
+      background: #16213e;
+      border: 1px solid #2a2a4a;
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .stat-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+    .stat-val { font-size: 22px; font-weight: 600; color: #f5c842; }
+
+    /* Timer */
+    .timer-bar-wrap {
+      background: #16213e;
+      border: 1px solid #2a2a4a;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 1.25rem;
+    }
+    .timer-label {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .timer-label span:last-child { color: #f0f0f0; font-weight: 500; }
+    .timer-track { height: 8px; background: #2a2a4a; border-radius: 99px; overflow: hidden; }
+    .timer-fill { height: 100%; background: #f5c842; border-radius: 99px; transition: width 1s linear; }
+
+    /* Machine */
+    .machine {
+      background: #16213e;
+      border: 1px solid #2a2a4a;
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .reels { display: flex; gap: 12px; justify-content: center; margin-bottom: 1.25rem; }
+    .reel {
+      width: 86px;
+      height: 86px;
+      background: #0f0f23;
+      border: 2px solid #3a3a6a;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      transition: border-color 0.3s;
+    }
+    .reel.spinning { animation: spin-reel 0.12s steps(1) infinite; border-color: #f5c842; }
+    .reel.winner { border-color: #1D9E75; box-shadow: 0 0 12px #1D9E7544; }
+    @keyframes spin-reel {
+      0%   { transform: translateY(0); }
+      50%  { transform: translateY(-5px); }
+      100% { transform: translateY(0); }
+    }
+
+    .result-msg {
+      text-align: center;
+      font-size: 16px;
+      font-weight: 600;
+      min-height: 24px;
+      margin-bottom: 1.25rem;
+      color: #f0f0f0;
+    }
+    .result-msg.win  { color: #1D9E75; }
+    .result-msg.lose { color: #E24B4A; }
+    .result-msg.info { color: #f5c842; }
+
+    /* Bet row */
+    .bet-row { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
+    .bet-row label { font-size: 13px; color: #888; white-space: nowrap; }
+    .bet-row input[type=range] {
+      flex: 1;
+      accent-color: #f5c842;
+      cursor: pointer;
+    }
+    .bet-row span { font-size: 15px; font-weight: 600; min-width: 40px; text-align: right; color: #f5c842; }
+
+    /* Spin button */
+    .spin-btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 10px;
+      border: none;
+      background: #f5c842;
+      color: #1a1a2e;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: background 0.15s, transform 0.1s, opacity 0.15s;
+    }
+    .spin-btn:hover  { background: #f7d460; }
+    .spin-btn:active { transform: scale(0.98); }
+    .spin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Paytable */
+    .paytable {
+      background: #16213e;
+      border: 1px solid #2a2a4a;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 1.25rem;
+    }
+    .paytable-title { font-size: 12px; color: #888; margin-bottom: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+    .pay-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: #ccc;
+      padding: 5px 0;
+      border-bottom: 1px solid #2a2a4a;
+    }
+    .pay-row:last-child { border-bottom: none; }
+    .pay-mult { font-size: 13px; font-weight: 600; color: #f5c842; }
+
+    /* History */
+    .history {
+      font-size: 12px;
+      color: #666;
+      text-align: center;
+      min-height: 18px;
+      word-break: break-all;
+    }
+
+    /* Recharge button */
+    .recharge-btn {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 10px;
+      border: 1px solid #f5c842;
+      background: transparent;
+      color: #f5c842;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.15s;
+    }
+    .recharge-btn:hover { background: #f5c84222; }
+    .recharge-btn.hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>🎰 Lucky Vegas</h1>
+    <p class="subtitle">Cassino LA VEGAS</p>
+
+    <div class="balance-row">
+      <div class="stat-card">
+        <div class="stat-label">Saldo</div>
+        <div class="stat-val" id="balance">1.000</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Maior ganho</div>
+        <div class="stat-val" id="best-win">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Rodadas</div>
+        <div class="stat-val" id="rounds">0</div>
+      </div>
+    </div>
+
+    <div class="timer-bar-wrap">
+      <div class="timer-label">
+        <span>Próximas moedas grátis (+200)</span>
+        <span id="timer-txt">2:00</span>
+      </div>
+      <div class="timer-track">
+        <div class="timer-fill" id="timer-fill" style="width:100%"></div>
+      </div>
+    </div>
+
+    <div class="machine">
+      <div class="reels" id="reels">
+        <div class="reel" id="r0">🍒</div>
+        <div class="reel" id="r1">🍋</div>
+        <div class="reel" id="r2">⭐</div>
+      </div>
+      <div class="result-msg" id="msg">Boa sorte!</div>
+      <div class="bet-row">
+        <label>Aposta</label>
+        <input type="range" id="bet-slider" min="10" max="200" step="10" value="50">
+        <span id="bet-val">50</span>
+      </div>
+      <button class="spin-btn" id="spin-btn">GIRAR</button>
+      <button class="recharge-btn hidden" id="recharge-btn">Recarregar saldo (500 moedas)</button>
+    </div>
+
+    <div class="paytable">
+      <div class="paytable-title">Tabela de Prêmios</div>
+      <div class="pay-row"><span>🎰🎰🎰 Jackpot</span><span class="pay-mult">×20</span></div>
+      <div class="pay-row"><span>💎💎💎</span><span class="pay-mult">×15</span></div>
+      <div class="pay-row"><span>7️⃣7️⃣7️⃣</span><span class="pay-mult">×10</span></div>
+      <div class="pay-row"><span>⭐⭐⭐</span><span class="pay-mult">×8</span></div>
+      <div class="pay-row"><span>🍇🍇🍇</span><span class="pay-mult">×6</span></div>
+      <div class="pay-row"><span>🍒🍒🍒</span><span class="pay-mult">×5</span></div>
+      <div class="pay-row"><span>🍋🍋🍋</span><span class="pay-mult">×4</span></div>
+      <div class="pay-row"><span>Qualquer dois iguais</span><span class="pay-mult">×1.5</span></div>
+    </div>
+
+    <div class="history" id="history"></div>
+  </div>
+
+  <script>
+    const SYMBOLS = ['🍒','🍋','🍇','⭐','7️⃣','💎','🎰'];
+    const WEIGHTS  = [30, 25, 18, 12, 8, 5, 2];
+    const TOTAL_W  = WEIGHTS.reduce((a, b) => a + b, 0);
+
+    let balance = 1000, bestWin = 0, rounds = 0, spinning = false;
+    let timerTotal = 120, timerLeft = 120;
+    let histLog = [];
+
+    function pickSymbol() {
+      let r = Math.random() * TOTAL_W, cum = 0;
+      for (let i = 0; i < SYMBOLS.length; i++) {
+        cum += WEIGHTS[i];
+        if (r < cum) return SYMBOLS[i];
+      }
+      return SYMBOLS[0];
+    }
+
+    function fmt(n) { return Math.round(n).toLocaleString('pt-BR'); }
+
+    function updateUI() {
+      document.getElementById('balance').textContent  = fmt(balance);
+      document.getElementById('best-win').textContent = fmt(bestWin);
+      document.getElementById('rounds').textContent   = rounds;
+    }
+
+    const slider = document.getElementById('bet-slider');
+    const betVal = document.getElementById('bet-val');
+    slider.addEventListener('input', () => { betVal.textContent = slider.value; });
+
+    document.getElementById('spin-btn').addEventListener('click', doSpin);
+    document.getElementById('recharge-btn').addEventListener('click', () => {
+      balance += 500;
+      updateUI();
+      document.getElementById('recharge-btn').classList.add('hidden');
+      setMsg('Recarregado! +500 moedas.', 'info');
+    });
+
+    function setMsg(text, type = '') {
+      const el = document.getElementById('msg');
+      el.textContent = text;
+      el.className = 'result-msg' + (type ? ' ' + type : '');
+    }
+
+    function doSpin() {
+      if (spinning) return;
+      const bet = parseInt(slider.value);
+      if (balance < bet) {
+        setMsg('Saldo insuficiente!', 'lose');
+        document.getElementById('recharge-btn').classList.remove('hidden');
+        return;
+      }
+      balance -= bet;
+      rounds++;
+      spinning = true;
+      document.getElementById('spin-btn').disabled = true;
+      setMsg('...');
+
+      const reelEls = [
+        document.getElementById('r0'),
+        document.getElementById('r1'),
+        document.getElementById('r2')
+      ];
+      reelEls.forEach(r => { r.classList.add('spinning'); r.classList.remove('winner'); });
+
+      let ticks = 0;
+      const anim = setInterval(() => {
+        reelEls.forEach(r => { r.textContent = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]; });
+        ticks++;
+        if (ticks > 20) {
+          clearInterval(anim);
+          const results = [pickSymbol(), pickSymbol(), pickSymbol()];
+          reelEls.forEach((r, i) => {
+            r.textContent = results[i];
+            r.classList.remove('spinning');
+          });
+          calcResult(bet, results, reelEls);
+        }
+      }, 80);
+    }
+
+    function calcResult(bet, res, reelEls) {
+      const [a, b, c] = res;
+      let mult = 0;
+
+      if (a === b && b === c) {
+        const m = { '🎰': 20, '💎': 15, '7️⃣': 10, '⭐': 8, '🍇': 6, '🍒': 5, '🍋': 4 };
+        mult = m[a] || 3;
+      } else if (a === b || b === c || a === c) {
+        mult = 1.5;
+      }
+
+      const win = Math.round(bet * mult);
+      balance += win;
+      if (win > bestWin) bestWin = win;
+      updateUI();
+
+      if (win > 0) {
+        reelEls.forEach(r => r.classList.add('winner'));
+        const label = mult >= 10 ? `JACKPOT! +${fmt(win)} moedas!` : `Ganhou +${fmt(win)} moedas!`;
+        setMsg(label, 'win');
+      } else {
+        setMsg(`Perdeu ${fmt(bet)} moedas.`, 'lose');
+      }
+
+      histLog.unshift(win > 0 ? `+${fmt(win)}` : `-${fmt(bet)}`);
+      if (histLog.length > 10) histLog.pop();
+      document.getElementById('history').textContent = 'Histórico: ' + histLog.join('  ·  ');
+
+      if (balance < parseInt(slider.value)) {
+        document.getElementById('recharge-btn').classList.remove('hidden');
+      }
+
+      spinning = false;
+      document.getElementById('spin-btn').disabled = false;
+    }
+
+    function tickTimer() {
+      timerLeft--;
+      const pct = (timerLeft / timerTotal) * 100;
+      document.getElementById('timer-fill').style.width = pct + '%';
+      const m = Math.floor(timerLeft / 60);
+      const s = timerLeft % 60;
+      document.getElementById('timer-txt').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+      if (timerLeft <= 0) {
+        balance += 200;
+        updateUI();
+        timerLeft = timerTotal;
+        setMsg('+200 moedas grátis!', 'info');
+      }
+    }
+
+    setInterval(tickTimer, 1000);
+    updateUI();
+  </script>
+</body>
+</html>
